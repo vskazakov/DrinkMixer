@@ -9,6 +9,8 @@
 #import "MasterViewController.h"
 
 #import "DetailViewController.h"
+#import "DrinkViewController.h"
+#import "DrinkConstants.h"
 
 @interface MasterViewController () {
     NSMutableArray *_objects;
@@ -16,6 +18,8 @@
 @end
 
 @implementation MasterViewController
+@synthesize drinks=drinks_;
+@synthesize bgView;
 
 @synthesize detailViewController = _detailViewController;
 
@@ -23,13 +27,15 @@
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        self.title = NSLocalizedString(@"Master", @"Master");
+        self.title = NSLocalizedString(@"DrinkMan", @"DrinkMan");
     }
     return self;
 }
-							
+
 - (void)dealloc
 {
+    [drinks_ release];
+    
     [_detailViewController release];
     [_objects release];
     [super dealloc];
@@ -37,12 +43,21 @@
 
 - (void)viewDidLoad
 {
+    bgView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 480)];
+    bgView.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"bg.png"]];
+    
     [super viewDidLoad];
+    
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"DrinkArray" ofType:@"plist"];
+    
+    //drinks_=[[NSMutableArray alloc] initWithObjects:@"b52", @"Manhattan", @"Mojito", @"Wisky-cola", nil];
+    
+    drinks_=[[NSMutableArray alloc] initWithContentsOfFile:path];
 	// Do any additional setup after loading the view, typically from a nib.
-    self.navigationItem.leftBarButtonItem = self.editButtonItem;
-
-    UIBarButtonItem *addButton = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(insertNewObject:)] autorelease];
-    self.navigationItem.rightBarButtonItem = addButton;
+    //    self.navigationItem.leftBarButtonItem = self.editButtonItem;
+    //
+    //    UIBarButtonItem *addButton = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(insertNewObject:)] autorelease];
+    //    self.navigationItem.rightBarButtonItem = self.addButton;
 }
 
 - (void)viewDidUnload
@@ -75,23 +90,27 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return _objects.count;
+    return [self.drinks count];
 }
 
 // Customize the appearance of table view cells.
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *CellIdentifier = @"Cell";
+    tableView.backgroundView = bgView;
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
         cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
-
-
-    NSDate *object = [_objects objectAtIndex:indexPath.row];
-    cell.textLabel.text = [object description];
+    
+    
+    
+    cell.textLabel.font = [UIFont fontWithName:@"Zapfino" size:16];
+    cell.textLabel.text = [[self.drinks objectAtIndex:indexPath.row] objectForKey:NAME_KEY];
+    cell.textLabel.textColor = [UIColor blackColor];
+    cell.backgroundColor=[UIColor clearColor];
     return cell;
 }
 
@@ -112,29 +131,34 @@
 }
 
 /*
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
-{
-}
-*/
+ // Override to support rearranging the table view.
+ - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
+ {
+ }
+ */
 
 /*
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    // Return NO if you do not want the item to be re-orderable.
-    return YES;
-}
-*/
-
+ // Override to support conditional rearranging of the table view.
+ - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
+ {
+ // Return NO if you do not want the item to be re-orderable.
+ return YES;
+ }
+ */
+#pragma mark -
+#pragma mark Table view delegate
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    DrinkViewController *viewController = [[DrinkViewController alloc] initWithNibName:@"DrinkViewController" bundle:nil];
+    viewController.drink = [self.drinks objectAtIndex:indexPath.row];
     if (!self.detailViewController) {
         self.detailViewController = [[[DetailViewController alloc] initWithNibName:@"DetailViewController" bundle:nil] autorelease];
     }
     NSDate *object = [_objects objectAtIndex:indexPath.row];
     self.detailViewController.detailItem = object;
-    [self.navigationController pushViewController:self.detailViewController animated:YES];
+    
+    [self.navigationController pushViewController:viewController animated:YES];
+    [DrinkViewController release];
 }
 
 @end
